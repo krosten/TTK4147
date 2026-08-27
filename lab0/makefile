@@ -17,4 +17,4 @@ $(TARGET): $(OBJECTS)
 	gcc $(CFLAGS) -c -o $@ $<
 
 clean:
-	r, f $(TARGET $(OBJECTS)
+	rm -f $(TARGET) $(OBJECTS)
