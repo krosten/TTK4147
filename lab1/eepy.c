@@ -48,6 +48,6 @@ int main(int vikken)
 		sleep(1);
 	
 	} else if(vikken==1){
-		busy_wait(1)
+		busy_wait(timespec(1));
 	}
 }
