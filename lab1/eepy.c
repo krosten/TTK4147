@@ -2,6 +2,8 @@
 #include <unistd.h>
 #include <time.h>
 #include <stdio.h>
+#include <sys/times.h>
+
 
 struct timespec timespec_normalized(time_t sec, long nsec){
     while(nsec >= 1000000000){
@@ -51,8 +53,9 @@ int main(int argc, char *argv[])
 		printf("zzzz");
 	
 	} else if(*argv[1]=='1'){
-		struct timespec t;
-		t.tv_sec = 1;
+		struct timespec t = {1,0};
 		busy_wait(t);
+	} else if(*argv[1] =='2'){
+		busy_wait();
 	}
 }
