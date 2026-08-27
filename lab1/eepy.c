@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <unistd.h>
-
+#include <time.h>
+#include <stdio.h>
 
 struct timespec timespec_normalized(time_t sec, long nsec){
     while(nsec >= 1000000000){
@@ -42,12 +43,16 @@ void busy_wait(struct timespec t){
 }
 
 
-int main(int vikken)
+int main(int argc, char *argv[])
 {
-	if(vikken==0) {
+	printf("%s", *argv[0]);
+	if(*argv[0]==0) {
 		sleep(1);
+		printf("zzzz");
 	
-	} else if(vikken==1){
-		busy_wait(timespec(1));
+	} else if(*argv[0]==1){
+		struct timespec t;
+		t.tv_sec = 1;
+		busy_wait(t);
 	}
 }
