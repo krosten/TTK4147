@@ -15,7 +15,6 @@ void busy_wait(int sec){
     st_time = times(&st_cpu);
 
     while((en_time - st_time) < sec*100){
-        for(int i = 0; i < 10000; i++){}
         en_time = times(&en_cpu);
     }
 }
