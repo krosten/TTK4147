@@ -47,15 +47,13 @@ void busy_wait(struct timespec t){
 
 int main(int argc, char *argv[])
 {
-	printf("%s\n", argv[1]);
+	//printf("%s\n", argv[1]);
 	if(*argv[1]=='0') {
 		sleep(1);
-		printf("zzzz");
+		//printf("zzzz");
 	
 	} else if(*argv[1]=='1'){
 		struct timespec t = {1,0};
 		busy_wait(t);
-	} else if(*argv[1] =='2'){
-		busy_wait();
 	}
 }
