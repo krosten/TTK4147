@@ -24,22 +24,29 @@ static uint64_t now(void){
 }
 
 int main(void){
+    struct tms tb;
     volatile uint64_t sink = 0;
     long hist[50] = {0};
-    double npt = ns_per_tick();
+    double npt = 1e9 / (double)sysconf(_SC_CLK_TCK);  /* ns per tikk */
+    long over = 0;
 
-    fprintf(stderr, "ns per tick: %.3f\n", npt);
+    fprintf(stderr, "CLK_TCK: %ld, ns per tick: %.0f\n",
+            sysconf(_SC_CLK_TCK), npt);
 
     uint64_t a = now();
-    for (int i = 0; i < N; i++) sink += rdtsc();
+    for (int i = 0; i < N; i++) sink += (uint64_t)times(&tb);
     uint64_t b = now();
     fprintf(stderr, "latency: %.2f ns\n", (double)(b - a)/N);
 
     for (int i = 0; i < N; i++){
-        uint64_t t1 = rdtsc();
-        uint64_t t2 = rdtsc();
-        uint64_t ns = (uint64_t)((t2 - t1) * npt);
-        if (ns < 50) hist[ns]++;
+        uint64_t t1 = (uint64_t)times(&tb);
+        uint64_t t2 = (uint64_t)times(&tb);
+        /* bins på 1 ms, ellers havner alt i bin 0 */
+        uint64_t bin = (uint64_t)((t2 - t1) * npt / 1e6);
+        if (bin < 50) hist[bin]++;
+        else          over++;
     }
-    for (int i = 0; i < 50; i++) printf("%ld\n", hist[i]);
+    fprintf(stderr, "utenfor: %ld\n", over);
+
+    for (int i = 0; i < 50; i++) printf("%d %ld\n", i, hist[i]);
 }
