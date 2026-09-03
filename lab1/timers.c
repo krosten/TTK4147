@@ -50,5 +50,5 @@ int main(void){
     }
     fprintf(stderr, "utenfor: %ld\n", over);
 
-    for (int i = 0; i < 50; i++) printf("%d %ld\n", i, hist[i]);
+    for (int i = 0; i < 3000; i++) printf("%d %ld\n", i, hist[i]);
 }

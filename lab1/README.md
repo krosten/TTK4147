@@ -183,15 +183,16 @@ for(int i = 0; i < ns_max; i++){
 Pipe the output from the program into `gnuplot` like this:
 
 ```shell
-    ./program_name | gnuplot -p -e "plot '<cat' with boxes"
+./program_name | gnuplot -e "set terminal pngcairo size 1280, 720;set output 'plot.png';set title 'My Plot';plot '<cat' with boxes"
 ```
 
 If gnuplot is not installed or you get an error regarding gnuplot, use the
 following command to install the correct version:
 
 ```shell
-    sudo apt install gnuplot-x11
+    sudo apt install gnuplot
 ```
+The created png can be copied over to the lab-pc and viewed there. 
 
 Hint: `times()` might seem like it has infinite resolution, but this is not
 true. Have a look at the documentation to find out why.
