@@ -90,14 +90,31 @@ long array_length(Array a)
 
 void array_reserve(Array *a, long capacity)
 {
-    // TODO: your code here
-    
+    if (capacity <= a->capacity) {
+        return;  // already big enough
+    }
+
+    long length = array_length(*a);
+    long *newData = malloc(sizeof(long) * capacity);
+    assert(newData != NULL);
+
+    memcpy(newData, a->data + a->front, sizeof(long) * length);
+
+    free(a->data);
+    a->data = newData;
+    a->front = 0;
+    a->back = length;
+    a->capacity = capacity;
 }
 
 // Modifiers
 void array_insertBack(Array *a, long stuff)
 {
     // TODO: your code here
+    if (a->back >= a->capacity) {
+        array_reserve(a, a->capacity * 2);
+    }
+
     a->data[a->back] = stuff;
     a->back++;
 }

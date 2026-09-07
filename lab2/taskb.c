@@ -3,7 +3,7 @@
 
 int main(void)
 {
-    Array a = array_new(4);        /* liten kapasitet med vilje */
+    Array a = array_new(4); 
 
     for (long i = 0; i < 100; i++) {
         array_insertBack(&a, i);
