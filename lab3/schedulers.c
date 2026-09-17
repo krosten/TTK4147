@@ -229,4 +229,26 @@ void shortest_remaining_time(struct Task **tasks, int taskCount, int timeout, in
 void feedback(struct Task **tasks, int taskCount, int timeout, int quantum)
 {
     // Implement your solution here
+    const int maxLevel = taskCount - 1; // Bottom queue runs round-robin
+    int level[taskCount];
+    int seq[taskCount];
+    int counter = 0;
+
+    for (int i = 0; i < taskCount; i++) {
+        level[i] = 0;
+        seq[i] = -1; // Not queued yet
+    }
+
+    do {
+        int best = -1;
+        for (int i = 0; i < taskCount; i++) {
+            if (tasks[i]->state == finished || tasks[i]->arrivalTime >globalTime)
+                continue;
+            if (seq[i] == -1)
+                seq[i] = counter++; // Just arrived, enters the top queue
+            if (best == -1 || level[i] < level[best] ||
+                (level[i] == level[best] && seq[i] < seq[best]))
+                best = i;
+        }
+    } while (globalTime < timeout);
 }
