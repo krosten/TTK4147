@@ -71,133 +71,144 @@ void round_robin(struct Task **tasks, int taskCount, int timeout, int quantum)
 }
 
 // Implement your schedulers here!
+
+// Block until the timer thread ticks, so the scheduler does not spin while it
+// waits for the next task to arrive.
+static void wait_one_time_unit(void)
+{
+    pthread_mutex_lock(&timeMutex);
+    pthread_cond_wait(&timeCond, &timeMutex);
+    pthread_mutex_unlock(&timeMutex);
+}
+
+// Pick the best runnable task, ignoring tasks that are finished or have not
+// arrived yet. Returns NULL when nothing is runnable at the moment.
+static struct Task *select_task(struct Task **tasks, int taskCount, bool better(struct Task *, struct Task *))
+{
+    struct Task *best = NULL;
+
+    for (int taskIndex = 0; taskIndex < taskCount; taskIndex++)
+    {
+        struct Task *task = tasks[taskIndex];
+
+        if (task->state == finished || task->arrivalTime > globalTime)
+            continue;
+
+        if (best == NULL || better(task, best))
+            best = task;
+    }
+
+    return best;
+}
+
+// Run the selected task to completion, the way a non-preemptive scheduler does.
+// wait_for_rescheduling() returns as soon as the task reaches the finished
+// state, so the timeout only acts as an upper bound.
+static void run_until_finished(struct Task *task, int timeout)
+{
+    if (task->startTime == -1)
+        task->startTime = globalTime;
+    set_task_state(task, running);
+
+    wait_for_rescheduling(timeout, task);
+}
+
+static int remaining_runtime(struct Task *task)
+{
+    return task->totalRuntime - task->currentRuntime;
+}
+
+// Response ratio = (W + S)/S, where W is the time spent waiting since arrival
+// and S is the total runtime of the task.
+static float response_ratio(struct Task *task)
+{
+    float w = (float)(globalTime - task->arrivalTime);
+    float s = (float)task->totalRuntime;
+
+    return (w + s) / s;
+}
+
+static bool earlier_arrival(struct Task *a, struct Task *b)
+{
+    return a->arrivalTime < b->arrivalTime;
+}
+
+static bool shorter_total_runtime(struct Task *a, struct Task *b)
+{
+    return a->totalRuntime < b->totalRuntime;
+}
+
+static bool higher_response_ratio(struct Task *a, struct Task *b)
+{
+    return response_ratio(a) > response_ratio(b);
+}
+
+static bool less_remaining_runtime(struct Task *a, struct Task *b)
+{
+    return remaining_runtime(a) < remaining_runtime(b);
+}
+
 void first_come_first_served(struct Task **tasks, int taskCount, int timeout)
 {
-    // Implement your solution here
+    do
+    {
+        struct Task *taskToRun = select_task(tasks, taskCount, earlier_arrival);
 
-        // Her kommer første spor av kristian:
-    struct Task* taskToRun = tasks[0]; // Init task pointer
-
-    do{
-        // Find the earliest unfinished Task
-        for(int taskIndex = 1; taskIndex < taskCount; taskIndex++){
-            if(tasks[taskIndex]->state == finished || tasks[taskIndex]->arrivalTime > globalTime){
-                continue;
-            }
-
-            if(tasks[taskIndex]->arrivalTime < taskToRun->arrivalTime){
-                struct Task* taskToRun = tasks[taskIndex];
-            }
-        }
-
-        if(taskToRun == finished || taskToRun->arrivalTime > globalTime){ // New task was not available yet
+        if (taskToRun == NULL) // Nothing has arrived yet
+        {
+            wait_one_time_unit();
             continue;
         }
 
-        if (taskToRun->startTime == -1)
-            taskToRun->startTime = globalTime; // Vet ikke hvorfor de gjør det i RR når det står at man ikke skal gjøre det i readme, men de gjør det i eksempelet så ¯\(ツ)/¯
-        set_task_state(taskToRun, running);
-
-        while(taskToRun->state != finished){} // Fant ingen form for signaling mekanisme uten quantum for at en task er ferdig, så her er en busy wait istedenfor, spør Joachim om noe finnes hvis det ikke funker
+        run_until_finished(taskToRun, timeout);
 
     } while (globalTime < timeout);
 }
 
 void shortest_process_next(struct Task **tasks, int taskCount, int timeout)
 {
-    // Implement your solution here
-    struct Task* taskToRun = tasks[0]; // Init task pointer
+    do
+    {
+        struct Task *taskToRun = select_task(tasks, taskCount, shorter_total_runtime);
 
-    do{
-        // Find the shortest unfinished Task
-        for(int taskIndex = 1; taskIndex < taskCount; taskIndex++){
-            if(tasks[taskIndex]->state == finished || tasks[taskIndex]->arrivalTime > globalTime){
-                continue;
-            }
-
-            if(tasks[taskIndex]->totalRuntime < taskToRun->totalRuntime){
-                struct Task* taskToRun = tasks[taskIndex];
-            }
-        }
-
-        if(taskToRun == finished || taskToRun->arrivalTime > globalTime){ // New task was not available yet
+        if (taskToRun == NULL)
+        {
+            wait_one_time_unit();
             continue;
         }
 
-        if (taskToRun->startTime == -1)
-            taskToRun->startTime = globalTime;
-        set_task_state(taskToRun, running);
-
-        while(taskToRun->state != finished){} // Fant ingen form for signaling mekanisme uten quantum for at en task er ferdig, så her er en busy wait istedenfor, spør Joachim om noe finnes hvis det ikke funker
+        run_until_finished(taskToRun, timeout);
 
     } while (globalTime < timeout);
 }
 
 void highest_response_ratio_next(struct Task **tasks, int taskCount, int timeout)
 {
-    // Implement your solution here
-        // Highest response ratio = (W + S)/S
-        // W = hvor lenge en prosess har ventet
-        // S = Hvor lang tid det tar for prosessen å fullføre
+    do
+    {
+        struct Task *taskToRun = select_task(tasks, taskCount, higher_response_ratio);
 
-    struct Task* taskToRun = tasks[0]; // Init task pointer
-
-    do{
-        // Find the Task with highest ratio
-        for(int taskIndex = 1; taskIndex < taskCount; taskIndex++){
-            if(tasks[taskIndex]->state == finished || tasks[taskIndex]->arrivalTime > globalTime){
-                continue;
-            }
-
-            // Calculate ratios
-            int taskToRunW = globalTime - taskToRun->arrivalTime;
-            int taskToRunS = taskToRun->totalRuntime;
-            float taskToRunRatio = ((float)taskToRunW + (float)taskToRunS) / (float)taskToRunS;
-
-            int taskW = globalTime - tasks[taskIndex]->arrivalTime;
-            int taskS = tasks[taskIndex]->totalRuntime;
-            float taskRatio = ((float)taskW + (float)taskS) / (float)taskS;
-
-            if(taskToRunRatio < taskRatio){
-                struct Task* taskToRun = tasks[taskIndex];
-            }
-        }
-
-        if(taskToRun == finished || taskToRun->arrivalTime > globalTime){ // New task was not available yet
+        if (taskToRun == NULL)
+        {
+            wait_one_time_unit();
             continue;
         }
 
-        if (taskToRun->startTime == -1)
-            taskToRun->startTime = globalTime;
-        set_task_state(taskToRun, running);
-
-        while(taskToRun->state != finished){} // Fant ingen form for signaling mekanisme uten quantum for at en task er ferdig, så her er en busy wait istedenfor, spør Joachim om noe finnes hvis det ikke funker
+        run_until_finished(taskToRun, timeout);
 
     } while (globalTime < timeout);
 }
+
 void shortest_remaining_time(struct Task **tasks, int taskCount, int timeout, int quantum)
 {
-    // Implement your solution here
+    do
+    {
+        // Reselect every quantum, so a newly arrived short task can preempt
+        struct Task *taskToRun = select_task(tasks, taskCount, less_remaining_runtime);
 
-    struct Task* taskToRun = tasks[0]; // Init task pointer
-
-    do{
-        // Find the Task with shortest time remaining
-        for(int taskIndex = 1; taskIndex < taskCount; taskIndex++){
-            if(tasks[taskIndex]->state == finished || tasks[taskIndex]->arrivalTime > globalTime){
-                continue;
-            }
-
-            // Calculate remaining time
-            int taskToRunRemaining = taskToRun->totalRuntime - taskToRun->currentRuntime;
-            int taskRemaining = tasks[taskIndex]->totalRuntime - tasks[taskIndex]->currentRuntime;
-
-            if(taskToRunRemaining > taskRemaining){
-                struct Task* taskToRun = tasks[taskIndex];
-            }
-        }
-
-        if(taskToRun == finished || taskToRun->arrivalTime > globalTime){ // New task was not available yet
+        if (taskToRun == NULL)
+        {
+            wait_one_time_unit();
             continue;
         }
 
@@ -209,21 +220,13 @@ void shortest_remaining_time(struct Task **tasks, int taskCount, int timeout, in
         wait_for_rescheduling(quantum, taskToRun);
 
         //  Check if the task is finished
-        if (taskToRun->state == finished)
-        {
-        }
-        else
-        {
+        if (taskToRun->state != finished)
             set_task_state(taskToRun, preempted);
-        }
 
     } while (globalTime < timeout);
 }
+
 void feedback(struct Task **tasks, int taskCount, int timeout, int quantum)
 {
     // Implement your solution here
-
-    // Har ikke laget forventninger av hvordan noen av schedulerene vil kjøres, så det må du gjøre for å sammenligne med output.
-    // Har ikke testet noe som helst btw, bare simulert det i hodet, så lykke til med debuggingen!
-    // Har også spart denne til deg, lykke til ;)
 }
