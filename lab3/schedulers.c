@@ -250,5 +250,30 @@ void feedback(struct Task **tasks, int taskCount, int timeout, int quantum)
                 (level[i] == level[best] && seq[i] < seq[best]))
                 best = i;
         }
+        if (best == -1) // Nothing runnable yet
+        {
+        wait_one_time_unit();
+            continue;
+        }
+
+        struct Task *taskToRun = tasks[best];
+
+        if (taskToRun->startTime == -1)
+            taskToRun->startTime = globalTime;
+        set_task_state(taskToRun, running);
+
+        // Run for one quantum
+        wait_for_rescheduling(quantum, taskToRun);
+
+        if (taskToRun->state != finished)
+        {
+            set_task_state(taskToRun, preempted);
+
+            // Demote one level, then to the back of that queue
+            if (level[best] < maxLevel)
+                level[best]++;
+            seq[best] = counter++;
+        }
+
     } while (globalTime < timeout);
 }
