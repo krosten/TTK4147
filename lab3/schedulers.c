@@ -40,22 +40,18 @@ void round_robin(struct Task **tasks, int taskCount, int timeout, int quantum)
 
     do
     {
-        // Skip finished tasks or those that have not arrived yet
         if (tasks[taskIndex]->state == finished || tasks[taskIndex]->arrivalTime > globalTime)
         {
             taskIndex = (taskIndex + 1) % taskCount;
             continue;
         }
 
-        // Set the task state to running
         if (tasks[taskIndex]->startTime == -1)
             tasks[taskIndex]->startTime = globalTime;
         set_task_state(tasks[taskIndex], running);
 
-        // Wait for the quantum interval
         wait_for_rescheduling(quantum, tasks[taskIndex]);
 
-        //  Check if the task is finished
         if (tasks[taskIndex]->state == finished)
         {
         }
@@ -64,16 +60,12 @@ void round_robin(struct Task **tasks, int taskCount, int timeout, int quantum)
             set_task_state(tasks[taskIndex], preempted);
         }
 
-        // Find the next task to run
         taskIndex = (taskIndex + 1) % taskCount;
 
     } while (globalTime < timeout);
 }
 
-// Implement your schedulers here!
 
-// Block until the timer thread ticks, so the scheduler does not spin while it
-// waits for the next task to arrive.
 static void wait_one_time_unit(void)
 {
     pthread_mutex_lock(&timeMutex);
@@ -81,8 +73,7 @@ static void wait_one_time_unit(void)
     pthread_mutex_unlock(&timeMutex);
 }
 
-// Pick the best runnable task, ignoring tasks that are finished or have not
-// arrived yet. Returns NULL when nothing is runnable at the moment.
+
 static struct Task *select_task(struct Task **tasks, int taskCount, bool better(struct Task *, struct Task *))
 {
     struct Task *best = NULL;
@@ -101,9 +92,7 @@ static struct Task *select_task(struct Task **tasks, int taskCount, bool better(
     return best;
 }
 
-// Run the selected task to completion, the way a non-preemptive scheduler does.
-// wait_for_rescheduling() returns as soon as the task reaches the finished
-// state, so the timeout only acts as an upper bound.
+
 static void run_until_finished(struct Task *task, int timeout)
 {
     if (task->startTime == -1)
@@ -118,8 +107,7 @@ static int remaining_runtime(struct Task *task)
     return task->totalRuntime - task->currentRuntime;
 }
 
-// Response ratio = (W + S)/S, where W is the time spent waiting since arrival
-// and S is the total runtime of the task.
+
 static float response_ratio(struct Task *task)
 {
     float w = (float)(globalTime - task->arrivalTime);
@@ -154,7 +142,7 @@ void first_come_first_served(struct Task **tasks, int taskCount, int timeout)
     {
         struct Task *taskToRun = select_task(tasks, taskCount, earlier_arrival);
 
-        if (taskToRun == NULL) // Nothing has arrived yet
+        if (taskToRun == NULL) 
         {
             wait_one_time_unit();
             continue;
