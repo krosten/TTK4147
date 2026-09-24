@@ -1,6 +1,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <semaphore.h>
+#include <unistd.h>
 
 #define filosofer 5
 
