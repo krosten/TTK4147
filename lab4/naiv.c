@@ -25,7 +25,7 @@ int main()
     {
         sem_init(&gaffelHandles[i], 0, 1);
         pthread_create(&filosoferHandles[i], NULL, (void*)philosopher, (void*)(long)i);
-        Eaten[i] = false;
+        Eaten[i] = 1;
     }
 
     // Wait for threads to finish
@@ -52,7 +52,7 @@ int philosopher(int id)
         give_venste_gaffel(id);
         give_hoyre_gaffel(id);
 
-        Eaten[id] = true;
+        Eaten[id] = 1;
         for(int i = 0; i < filosofer; i++)
         {
             if(!Eaten[i])
