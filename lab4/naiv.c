@@ -6,7 +6,7 @@
 
 pthread_t filosoferHandles[filosofer];
 sem_t gaffelHandles[filosofer];
-bool Eaten[filosofer];
+int Eaten[filosofer];
 
 pthread_barrier_t barr;
 
@@ -49,7 +49,7 @@ int philosopher(int id)
     {
         get_venstre_gaffel(id);
         get_hoyre_gaffel(id);
-        give_venste_gaffel(id);
+        give_venstre_gaffel(id);
         give_hoyre_gaffel(id);
 
         Eaten[id] = 1;
