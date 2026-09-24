@@ -74,10 +74,14 @@ int main()
 
 	// TODO set up priority inheritance
 	/*
+		
     	Initialize mutex attributes
         Set the mutex protocol in the attribute
         Initialixe the mutex with the attribute
     */
+	auto attr = pthread_mutexattr_init(&sem);
+	pthread_mutexattr_setprotocol(&attr, PTHREAD_PRIO_INHERIT);
+	pthread_mutex_init(&sem, &attr);
 	// Create tasks
 	int policy = SCHED_RR;
 	create_and_start_task(&threadL, low_f, policy, 1);

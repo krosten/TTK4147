@@ -15,3 +15,7 @@ Semaphores uses the most systemtime because it blockes threads, so that the thre
 Semaphores bruker mer brukertid fordi logikken semaphores bruker ligger på brukersiden og dette tar mer brukertid enne hvis logikken ikke eksisterer?
 
 user og sys har begge summen av tidene brukt i de ulike trådene så user = usert1 + usert2 lissom lissom
+
+## TASK D
+
+åssen funker set policy greia? tusen takkl
