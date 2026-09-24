@@ -19,3 +19,18 @@ user og sys har begge summen av tidene brukt i de ulike trådene så user = user
 ## TASK D
 
 åssen funker set policy greia? tusen takkl
+
+## TASK E
+
+Fiksa greia bro versegod
+
+## TASK F
+
+Initisialiseringen fullfører ikke i alle threadsene, returnerer i 47 av threadsene uten å initialisere. 
+
+## TASK G
+
+Fsanitize er geita med sausen
+
+## TASK H
+
