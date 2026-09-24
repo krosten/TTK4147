@@ -15,6 +15,7 @@ int give_venstre_gaffel(int id);
 int get_hoyre_gaffel(int id);
 int give_hoyre_gaffel(int id);
 int philosopher(int id);
+int eat();
 
 int main()
 {
@@ -57,6 +58,9 @@ int philosopher(int id)
         printf("Philosopher %d has taken the left fork\n", id);
         get_hoyre_gaffel(id);
         printf("Philosopher %d has taken the right fork\n", id);
+
+        eat();
+
         give_venstre_gaffel(id);
         printf("Philosopher %d has given the left fork\n", id);
         give_hoyre_gaffel(id);
@@ -138,5 +142,12 @@ int give_hoyre_gaffel(int id)
 
     sem_post(gaffel);
         
+    return 0;
+}
+
+int eat()
+{
+    int time = 1000;
+    usleep(time);
     return 0;
 }
