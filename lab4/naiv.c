@@ -10,6 +10,12 @@ bool Eaten[filosofer];
 
 pthread_barrier_t barr;
 
+int get_venstre_gaffel(int id);
+int give_venstre_gaffel(int id);
+int get_hoyre_gaffel(int id);
+int give_hoyre_gaffel(int id);
+int philosopher(int id);
+
 int main()
 {
     // Init
