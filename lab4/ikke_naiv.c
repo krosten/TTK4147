@@ -63,6 +63,7 @@ int philosopher(int id)
         printf("Philosopher %d has given the right fork\n", id);
 
         Eaten[id] = 1;
+        printf("Philosopher %d has eaten\n", id);
         for(int i = 0; i < filosofer; i++)
         {
             if(!Eaten[i])
