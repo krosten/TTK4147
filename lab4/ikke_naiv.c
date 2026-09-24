@@ -88,6 +88,8 @@ int get_venstre_gaffel(int id)
 
     gaffel = &gaffelHandles[gaffel_id];
 
+    get_hoyre_gaffel(id);
+    give_hoyre_gaffel(id);
     sem_wait(gaffel);
 
     return 0;
@@ -103,8 +105,6 @@ int give_venstre_gaffel(int id)
 
     gaffel = &gaffelHandles[gaffel_id];
 
-    get_hoyre_gaffel(id);
-    give_hoyre_gaffel(id);
     sem_post(gaffel);
 
     return 0;
