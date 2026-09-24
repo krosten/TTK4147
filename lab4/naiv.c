@@ -25,12 +25,16 @@ int main()
     {
         sem_init(&gaffelHandles[i], 0, 1);
         pthread_create(&filosoferHandles[i], NULL, (void*)philosopher, (void*)(long)i);
-        Eaten[i] = 1;
+        Eaten[i] = 0;
+        printf("Philosopher %d created\n", i);
     }
 
     // Wait for threads to finish
     for(int i = 0; i < filosofer; i++)
+    {
         pthread_join(filosoferHandles[i], NULL);
+        printf("Philosopher %d joined\n", i);
+    }
 
     // End
     pthread_barrier_destroy(&barr);
@@ -38,6 +42,8 @@ int main()
     {
         sem_destroy(&gaffelHandles[i]);
     }
+
+    return 0;
 }
 
 int philosopher(int id)
@@ -48,9 +54,13 @@ int philosopher(int id)
     while(!all_philosophers_have_eaten)
     {
         get_venstre_gaffel(id);
+        printf("Philosopher %d has taken the left fork\n", id);
         get_hoyre_gaffel(id);
+        printf("Philosopher %d has taken the right fork\n", id);
         give_venstre_gaffel(id);
+        printf("Philosopher %d has given the left fork\n", id);
         give_hoyre_gaffel(id);
+        printf("Philosopher %d has given the right fork\n", id);
 
         Eaten[id] = 1;
         for(int i = 0; i < filosofer; i++)
