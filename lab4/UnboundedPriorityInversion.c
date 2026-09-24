@@ -69,8 +69,11 @@ int main()
 {
 	// Setting up barrier and semaphore
 	int threadNum = 4;
+	int ret = 0;
 	pthread_barrier_init(&barrier, NULL, threadNum);
-	sem_init(&sem, 0, 1);
+	//sem_init(&sem, 0, 1);
+	pthread_mutex_t sem;
+	pthread_mutexattr_t attr;
 
 	// TODO set up priority inheritance
 	/*
@@ -79,9 +82,14 @@ int main()
         Set the mutex protocol in the attribute
         Initialixe the mutex with the attribute
     */
-	auto attr = pthread_mutexattr_init(&sem);
-	pthread_mutexattr_setprotocol(&attr, PTHREAD_PRIO_INHERIT);
-	pthread_mutex_init(&sem, &attr);
+	ret += pthread_mutexattr_init(&sem);
+	ret += pthread_mutexattr_setprotocol(&attr, PTHREAD_PRIO_INHERIT);
+	ret += pthread_mutex_init(&sem, &attr);
+	if (ret != 0)
+	{
+		printf("Error during task init!");
+	}
+
 	// Create tasks
 	int policy = SCHED_RR;
 	create_and_start_task(&threadL, low_f, policy, 1);
