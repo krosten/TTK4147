@@ -1,0 +1,249 @@
+TTK4147 LAB5 - PSEUDOKODE
+=========================
+
+Filen du skal endre: AVR32 Template/src/main.c
+Kun main.c. Ikke rør init() sitt innhold, ikke rør asf/.
+
+Pinner er allerede definert i main.c:
+    TEST_A / RESPONSE_A    (PA31 / PA30)
+    TEST_B / RESPONSE_B    (PA29 / PA28)
+    TEST_C / RESPONSE_C    (PA27 / PB00)
+
+Signalnivaa:
+    TEST x gaar LAV naar BRTT sender event
+    RESPONSE x skal gaa LAV som svar, holdes lav til TEST gaar hoy igjen
+
+Funksjoner du trenger (asf/avr32/drivers/gpio/gpio.h):
+    gpio_configure_pin(pin, flags)
+    gpio_get_pin_value(pin)             -> 0 eller 1
+    gpio_set_pin_low(pin)
+    gpio_set_pin_high(pin)
+    gpio_enable_pin_interrupt(pin, GPIO_FALLING_EDGE)
+    gpio_get_pin_interrupt_flag(pin)
+    gpio_clear_pin_interrupt_flag(pin)
+    busy_delay_us(n) / busy_delay_ms(n)
+
+
+-------------------------------------------------------------------
+FELLES - PINNEOPPSETT
+-------------------------------------------------------------------
+Gjelder alle tasks. Kalles fra main() rett etter init().
+Egen funksjon, slik at init() staar urort.
+
+funksjon init_brtt_pins():
+    for hver av TEST_A, TEST_B, TEST_C:
+        gpio_configure_pin(pin, GPIO_DIR_INPUT)
+
+    for hver av RESPONSE_A, RESPONSE_B, RESPONSE_C:
+        gpio_configure_pin(pin, GPIO_DIR_OUTPUT | GPIO_INIT_HIGH)
+
+    # INIT_HIGH fordi hvile-tilstand er hoy. Lav betyr "jeg svarer".
+
+
+-------------------------------------------------------------------
+TASK A - BUSY-WAIT, KUN A
+-------------------------------------------------------------------
+main():
+    init()
+    init_brtt_pins()
+
+    evig loop:
+        # vent paa at BRTT sender
+        mens gpio_get_pin_value(TEST_A) == 1:
+            ingenting
+
+        gpio_set_pin_low(RESPONSE_A)
+
+        # hold lav til BRTT har lest svaret
+        mens gpio_get_pin_value(TEST_A) == 0:
+            ingenting
+
+        gpio_set_pin_high(RESPONSE_A)
+
+MERK: ingen printf i loopen. Den oedelegger timingen.
+MERK: ikke busy_delay noe sted her. Hele poenget er aa svare umiddelbart.
+
+
+-------------------------------------------------------------------
+TASK B - BUSY-WAIT, A+B+C
+-------------------------------------------------------------------
+Kan ikke vente paa en pinne om gangen - da misser du de andre.
+Poll alle tre i samme loop, uavhengig av hverandre.
+
+main():
+    init()
+    init_brtt_pins()
+
+    evig loop:
+        hvis gpio_get_pin_value(TEST_A) == 0:
+            gpio_set_pin_low(RESPONSE_A)
+        ellers:
+            gpio_set_pin_high(RESPONSE_A)
+
+        samme for B
+        samme for C
+
+Dette er hele loopen. Speiler hver TEST-pinne over paa sin RESPONSE-pinne.
+
+SVAR PAA SPORSMAAL:
+  "Which one has the lowest maximum? Why?"
+    -> A alene. Loopen er kortere, saa verste tilfelle er naermere beste.
+       Med tre sjekker kan et event ankomme rett etter at sin egen sjekk
+       passerte -> maa vente en hel runde.
+  "Does the response for A, B and C look the same?"
+    -> Nei. A sjekkes forst i loopen, C sist. Systematisk skjevhet.
+       Se paa min/max per kanal i regnearket.
+
+
+-------------------------------------------------------------------
+TASK C - INTERRUPTS, A+B+C
+-------------------------------------------------------------------
+init() registrerer allerede interrupt_J3 paa AVR32_GPIO_IRQ_3.
+Du maa selv aktivere interrupt per pinne.
+
+I init_brtt_pins(), etter pinne-konfig:
+    gpio_enable_pin_interrupt(TEST_A, GPIO_FALLING_EDGE)
+    gpio_enable_pin_interrupt(TEST_B, GPIO_FALLING_EDGE)
+    gpio_enable_pin_interrupt(TEST_C, GPIO_FALLING_EDGE)
+
+interrupt_J3():
+    # alle tre pinner deler samme handler -> maa finne ut hvem som utloste
+    hvis gpio_get_pin_interrupt_flag(TEST_A):
+        gpio_set_pin_low(RESPONSE_A)
+        gpio_clear_pin_interrupt_flag(TEST_A)
+        mens gpio_get_pin_value(TEST_A) == 0: ingenting
+        gpio_set_pin_high(RESPONSE_A)
+
+    samme for B
+    samme for C
+
+main():
+    init()
+    init_brtt_pins()
+    evig loop:
+        ingenting
+
+MERK: flagget maa klareres, ellers fyrer interruptet om igjen i det
+uendelige.
+MERK: aa holde-og-vente inne i en ISR er stygt - du blokkerer de to
+andre kanalene. Det er nettopp problemet Task D handler om. Her er det
+greit fordi ventingen er kort.
+
+SVAR PAA SPORSMAAL:
+  "How do the timings compare to polling?"
+    -> Interrupt har fast overhead (lagre kontekst, hoppe til vektor),
+       men ingen pollesyklus aa vente paa. Forvent hoyere minimum enn
+       polling, men lavere og jevnere maksimum.
+  "Do A, B and C have the same response time? Why/why not?"
+    -> Nei. If-kjeden i handleren sjekker A forst. Samtidige events ->
+       C maa vente paa at A og B er ferdig behandlet.
+
+
+-------------------------------------------------------------------
+TASK D - FIRE MAALINGER
+-------------------------------------------------------------------
+
+D1: Task C + dyr B
+-------------------
+Som Task C, men i B-grenen:
+
+    hvis gpio_get_pin_interrupt_flag(TEST_B):
+        busy_delay_us(100)          # <-- "dyr beregning" FOR svaret
+        gpio_set_pin_low(RESPONSE_B)
+        ...
+
+Forventning: B blir 100us tregere. Men ogsaa A og C blir verre, fordi
+100us i en ISR blokkerer de andre interruptene.
+
+
+D2: Deferred / big while, uten dyr B
+-------------------------------------
+ISR setter kun flagg. All jobb i main-loopen.
+
+globalt:
+    volatile bool flagA = false
+    volatile bool flagB = false
+    volatile bool flagC = false
+
+    # volatile fordi ISR og main deler dem. Uten volatile kan
+    # kompilatoren cache verdien i et register og aldri se endringen.
+
+interrupt_J3():
+    hvis gpio_get_pin_interrupt_flag(TEST_A):
+        flagA = true
+        gpio_clear_pin_interrupt_flag(TEST_A)
+    samme for B og C
+
+main():
+    init()
+    init_brtt_pins()
+
+    evig loop:
+        hvis flagA:
+            flagA = false
+            gpio_set_pin_low(RESPONSE_A)
+            mens gpio_get_pin_value(TEST_A) == 0: ingenting
+            gpio_set_pin_high(RESPONSE_A)
+
+        samme for B
+        samme for C
+
+
+D3: Deferred + dyr B
+---------------------
+Som D2, men i main-loopens B-gren:
+
+        hvis flagB:
+            flagB = false
+            busy_delay_us(100)
+            gpio_set_pin_low(RESPONSE_B)
+            ...
+
+Fjerde maaling er Task C (uten dyr B) som du allerede har.
+
+De fire som skal sammenlignes:
+    1. Interrupt,  rask B   (= Task C)
+    2. Interrupt,  dyr B    (= D1)
+    3. Deferred,   rask B   (= D2)
+    4. Deferred,   dyr B    (= D3)
+
+SVAR PAA SPORSMAAL:
+  "For the deferred technique: faster or slower, and why?"
+    -> Tregere. To steg i stedet for ett: ISR -> flagg -> main oppdager
+       flagget neste runde. Ekstra latens = resten av while-loopen.
+  "For the expensive B: which solution had the least impact on A and C?"
+    -> Deferred. De 100 mikrosekundene brukes i main-loopen med
+       interrupts paa, saa A og C kan fortsatt utlose ISR og faa
+       flagget sitt satt. Med dyr B inne i ISR-en er interruptet
+       blokkert i hele 100us -> A og C faar en hale i histogrammet.
+       Det er hele poenget med deferred handling.
+
+
+-------------------------------------------------------------------
+TASK E (valgfri) - OPTIMALISER
+-------------------------------------------------------------------
+Maal: lav OG jevn responstid for alle tre, med dyr B beholdt.
+
+Ide: hybrid. Svar forst, regn etterpaa.
+Den dyre beregningen maa ikke skje for RESPONSE_B settes - oppgaven
+sier bare at den hoerer til B-eventet.
+
+interrupt_J3():
+    A og C: svar direkte i ISR (raskt, ingen grunn til aa utsette)
+    B:      svar direkte i ISR, sett saa flagB
+main-loop:
+    hvis flagB: flagB = false; busy_delay_us(100)
+
+Da betaler ingen av kanalene for de 100us.
+Nevn i svaret at dette bare funker fordi beregningen ikke paavirker
+selve svaret. Hvis den gjorde det, maatte du ventet.
+
+
+-------------------------------------------------------------------
+HUSKELISTE FOR MAALING
+-------------------------------------------------------------------
+- Fjern/kommenter ut all printf for du maaler
+- Minst 1000 subtests paa A+B+C
+- Lagre hver maaling i regnearket med en gang, eget ark
+- Juster tidsskala saa hoyre kolonne i histogrammet er null
+- Backup av alle maalinger for du gaar fra labben
