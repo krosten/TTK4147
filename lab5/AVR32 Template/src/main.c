@@ -39,58 +39,45 @@ void init(){
     #endif
 }
 
-__attribute__((__interrupt__)) static void interrupt_J3(void){ 
+__attribute__((__interrupt__)) static void interrupt_J3(void){
 	if(gpio_get_pin_interrupt_flag(TEST_A)) {
-		//gpio_set_pin_low(RESPONSE_A);
 		gpio_clear_pin_interrupt_flag(TEST_A);
-		a_Flag = 1;
-		//while(!gpio_get_pin_value(TEST_A)){}
-		//gpio_set_pin_high(RESPONSE_A);
 		
-		//if(!gpio_get_pin_value(TEST_A)){
-		//	gpio_set_pin_low(RESPONSE_A);
-		//}
-		//else{
-			//gpio_set_pin_high(RESPONSE_A);
-		//}
+		if(!gpio_get_pin_value(TEST_A)){
+			gpio_set_pin_low(RESPONSE_A);
+			//a_Flag = 1;
+		}
+		else{
+			gpio_set_pin_high(RESPONSE_A);
+			//a_Flag = 0;
+		}
 
 		
 	}
 	if(gpio_get_pin_interrupt_flag(TEST_B)) {
-		//busy_delay_us(100);
-		//gpio_set_pin_low(RESPONSE_B);
 		gpio_clear_pin_interrupt_flag(TEST_B);
 		
-		b_Flag = 1;
-		//while(!gpio_get_pin_value(TEST_B)){}
-		//gpio_set_pin_high(RESPONSE_B);
-		
-		
-				//if(!gpio_get_pin_value(TEST_B)){
-					//gpio_set_pin_low(RESPONSE_B);
-					//b_Flag = 1;
-				//}
-				
-								//if(gpio_get_pin_value(TEST_B) && b_Flag == 1){
-									//gpio_set_pin_low(RESPONSE_B);
-									//b_Flag = 0;
-								//}
+		if(!gpio_get_pin_value(TEST_B)){
+			//gpio_set_pin_low(RESPONSE_B);
+			b_Flag = 1;
+		}
+		else{
+			//gpio_set_pin_high(RESPONSE_B);
+			b_Flag = 0;
+		}
 
-	}	
+	}
 	if(gpio_get_pin_interrupt_flag(TEST_C)) {
-		//gpio_set_pin_low(RESPONSE_C);
 		gpio_clear_pin_interrupt_flag(TEST_C);
 		
-		c_Flag = 1;
-		//while(!gpio_get_pin_value(TEST_C)){}
-		//gpio_set_pin_high(RESPONSE_C);
-		
-				//if(!gpio_get_pin_value(TEST_C)){
-					//gpio_set_pin_low(RESPONSE_C);
-				//}
-				//else{
-				//	gpio_set_pin_high(RESPONSE_C);
-				//}
+		if(!gpio_get_pin_value(TEST_C)){
+			gpio_set_pin_low(RESPONSE_C);
+			//c_Flag = 1;
+		}
+		else{
+			gpio_set_pin_high(RESPONSE_C);
+			//c_Flag = 0;
+		}
 
 	}
 }
@@ -105,27 +92,28 @@ int main (void){
 	gpio_configure_pin(RESPONSE_B, GPIO_DIR_OUTPUT | GPIO_INIT_HIGH);
 	gpio_configure_pin(TEST_C, GPIO_DIR_INPUT);
 	gpio_configure_pin(RESPONSE_C, GPIO_DIR_OUTPUT | GPIO_INIT_HIGH);
-	gpio_enable_pin_interrupt(TEST_A, GPIO_FALLING_EDGE);
-	gpio_enable_pin_interrupt(TEST_B, GPIO_FALLING_EDGE);
-	gpio_enable_pin_interrupt(TEST_C, GPIO_FALLING_EDGE);
+	gpio_enable_pin_interrupt(TEST_A, GPIO_PIN_CHANGE);
+	gpio_enable_pin_interrupt(TEST_B, GPIO_PIN_CHANGE);
+	gpio_enable_pin_interrupt(TEST_C, GPIO_PIN_CHANGE);
 
     while(1){
-		if(a_Flag){
-			a_Flag = 0;
-			gpio_set_pin_low(RESPONSE_A);
-			while(!gpio_get_pin_value(TEST_A));
-			gpio_set_pin_high(RESPONSE_A);
-		}
-		if(c_Flag){
-			c_Flag = 0;
-			gpio_set_pin_low(RESPONSE_C);
-			while(!gpio_get_pin_value(TEST_C));
-			gpio_set_pin_high(RESPONSE_C);
-		}
+		//if(a_Flag){
+		//	gpio_set_pin_low(RESPONSE_A);
+		//}
+		//else{
+		//	gpio_set_pin_high(RESPONSE_A);
+		//}
+		//if(c_Flag){
+		//	gpio_set_pin_low(RESPONSE_C);
+		//}
+		//else{
+		//	gpio_set_pin_high(RESPONSE_C);
+		//}
 		if(b_Flag){
-			b_Flag = 0;
-			gpio_set_pin_low(RESPONSE_B);
-			while(!gpio_get_pin_value(TEST_B));
+			busy_delay_us(100);
+			gpio_set_pin_low(RESPONSE_B);	
+		}
+		else{
 			gpio_set_pin_high(RESPONSE_B);
 		}
 	}
