@@ -36,7 +36,28 @@ void init(){
 }
 
 __attribute__((__interrupt__)) static void interrupt_J3(void){ 
+	if(gpio_get_pin_interrupt_flag(TEST_A)) {
+		gpio_set_pin_low(RESPONSE_A);
+		gpio_clear_pin_interrupt_flag(TEST_A);
+		while(!gpio_get_pin_value(TEST_A)){}
+		gpio_set_pin_high(RESPONSE_A);
 
+		
+	}
+	if(gpio_get_pin_interrupt_flag(TEST_B)) {
+		gpio_set_pin_low(RESPONSE_B);
+		gpio_clear_pin_interrupt_flag(TEST_B);
+		while(!gpio_get_pin_value(TEST_B)){}
+		gpio_set_pin_high(RESPONSE_B);
+
+	}	
+	if(gpio_get_pin_interrupt_flag(TEST_C)) {
+		gpio_set_pin_low(RESPONSE_C);
+		gpio_clear_pin_interrupt_flag(TEST_C);
+		while(!gpio_get_pin_value(TEST_C)){}
+		gpio_set_pin_high(RESPONSE_C);
+
+	}
 }
 
 
@@ -45,11 +66,15 @@ int main (void){
 
     gpio_configure_pin(TEST_A, GPIO_DIR_INPUT);
     gpio_configure_pin(RESPONSE_A, GPIO_DIR_OUTPUT | GPIO_INIT_HIGH);
+	gpio_configure_pin(TEST_B, GPIO_DIR_INPUT);
+	gpio_configure_pin(RESPONSE_B, GPIO_DIR_OUTPUT | GPIO_INIT_HIGH);
+	gpio_configure_pin(TEST_C, GPIO_DIR_INPUT);
+	gpio_configure_pin(RESPONSE_C, GPIO_DIR_OUTPUT | GPIO_INIT_HIGH);
+	gpio_enable_pin_interrupt(TEST_A, GPIO_FALLING_EDGE);
+	gpio_enable_pin_interrupt(TEST_B, GPIO_FALLING_EDGE);
+	gpio_enable_pin_interrupt(TEST_C, GPIO_FALLING_EDGE);
 
     while(1){
-        while(gpio_get_pin_value(TEST_A));
-        gpio_set_pin_low(RESPONSE_A);
-        while(!gpio_get_pin_value(TEST_A));
-        gpio_set_pin_high(RESPONSE_A);
+		
     }
 }
