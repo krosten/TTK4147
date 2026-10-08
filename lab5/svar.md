@@ -67,4 +67,4 @@ deferred har mindre impact
 
 ## TASK E
 
-husker ikke om vi gjorde denne?
+Ikke gjort.
