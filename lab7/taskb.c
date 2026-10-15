@@ -52,12 +52,13 @@ void* responseTask(void* arg)
     set_cpu(args->cpu_id);
 
     while (1) {
-        while (digitalRead(args->pinIn) == HIGH);
+        while (digitalRead(args->pinIn) == HIGH){
             digitalWrite(args->pinOut, LOW);
-
-        while (digitalRead(args->pinIn) == LOW);
+        }
+        while (digitalRead(args->pinIn) == LOW){
             digitalWrite(args->pinOut, HIGH);
-    }
+        }
+    }   
 
     return NULL;
 }
