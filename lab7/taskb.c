@@ -57,6 +57,7 @@ void* responseTask(void* arg)
 
         else
             digitalWrite(args->pinOut, HIGH);
+        pthread_yield()
     }   
 
     return NULL;
