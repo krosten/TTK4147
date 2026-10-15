@@ -12,7 +12,7 @@
 #define PININ3  16
 #define PINOUT3 1
 
-#define NUM_DISTURBANCES 2
+#define NUM_DISTURBANCES 3
 
 #include <sched.h>
 
