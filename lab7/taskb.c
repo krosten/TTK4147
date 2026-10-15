@@ -67,9 +67,9 @@ int main(void)
     io_init();
 
     responseTaskArgs args[3] = {
-        { PININ1, PINOUT1, 0},
-        { PININ2, PINOUT2, 0},
-        { PININ3, PINOUT3, 0},  
+        { PININ1, PINOUT1, 1},
+        { PININ2, PINOUT2, 2},
+        { PININ3, PINOUT3, 3},  
     };
     pthread_t threads[3];
 
