@@ -67,4 +67,3 @@ deferred har mindre impact
 
 ## TASK E
 
-Ikke gjort.
