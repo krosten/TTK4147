@@ -12,6 +12,8 @@
 #define PININ3  16
 #define PINOUT3 1
 
+#define NUM_DISTURBANCES 1
+
 #include <sched.h>
 
 int set_cpu(int cpu_id)
@@ -84,15 +86,15 @@ int main(void)
         { PININ2, PINOUT2, 2},
         { PININ3, PINOUT3, 2},  
     };
-    pthread_t threads[13];
+    pthread_t threads[3+NUM_DISTURBANCES];
 
     for (int i = 0; i < 3; i++)
         pthread_create(&threads[i], NULL, responseTask, &args[i]);
 
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < NUM_DISTURBANCES; i++)
         pthread_create(&threads[i], NULL, disturbance, &args[i]);
 
-    for (int i = 0; i < 13; i++)
+    for (int i = 0; i < 3+NUM_DISTURBANCES; i++)
         pthread_join(threads[i], NULL);
 
     return 0;
