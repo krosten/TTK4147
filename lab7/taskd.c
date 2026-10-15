@@ -14,7 +14,7 @@
 
 #define NUM_DISTURBANCES 0
 #define MS 100000
-#define POLL_PERIOD 4*MS
+#define POLL_PERIOD 2*MS
 
 #include <sched.h>
 
