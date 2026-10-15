@@ -30,10 +30,10 @@ void* responseTask(void* arg)
     responseTaskArgs* args = (responseTaskArgs*)arg;
 
     while (1) {
-        if (digitalRead(args->pinIn) == HIGH);
+        if (digitalRead(args->pinIn) == HIGH)
             digitalWrite(args->pinOut, LOW);
 
-        if (digitalRead(args->pinIn) == LOW);
+        else
             digitalWrite(args->pinOut, HIGH);
     }
 
