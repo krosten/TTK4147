@@ -12,7 +12,7 @@
 #define PININ3  16
 #define PINOUT3 1
 
-#define NUM_DISTURBANCES 2
+#define NUM_DISTURBANCES 1
 #define MS 100000
 #define POLL_PERIOD 0.5*MS
 
