@@ -2,6 +2,8 @@
 
 #include <pthread.h>
 #include <wiringPi.h>
+#include <errno.h>
+#include <unistd.h>
 
 #define PININ1  8
 #define PINOUT1 9
