@@ -53,10 +53,10 @@ void* responseTask(void* arg)
 
     while (1) {
         if (digitalRead(args->pinIn) == HIGH)
-            digitalWrite(args->pinOut, HIGH);
+            digitalWrite(args->pinOut, LOW);
 
         else
-            digitalWrite(args->pinOut, LOW);
+            digitalWrite(args->pinOut, HIGH);
     }   
 
     return NULL;
