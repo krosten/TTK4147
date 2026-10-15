@@ -1,6 +1,7 @@
+#define _GNU_SOURCE
+
 #include <pthread.h>
 #include <wiringPi.h>
-#define _GNU_SOURCE
 
 #define PININ1  8
 #define PINOUT1 9
