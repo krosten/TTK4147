@@ -64,7 +64,7 @@ void* responseTask(void* arg)
     set_cpu(args->cpu_id);
 
     while (1) {
-        sleep_realtime(POLL_PERIOD)
+        sleep_realtime(POLL_PERIOD);
         if (digitalRead(args->pinIn) == LOW)
             digitalWrite(args->pinOut, LOW);
 
