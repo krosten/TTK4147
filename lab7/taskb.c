@@ -1,5 +1,6 @@
 #include <pthread.h>
 #include <wiringPi.h>
+#define _GNU_SOURCE
 
 #define PININ1  8
 #define PINOUT1 9
@@ -45,7 +46,7 @@ void* responseTask(void* arg)
 {
     responseTaskArgs* args = (responseTaskArgs*)arg;
 
-    set_cpu(args->cpu_id)
+    set_cpu(args->cpu_id);
 
     while (1) {
         while (digitalRead(args->pinIn) == HIGH);
@@ -65,7 +66,7 @@ int main(void)
     responseTaskArgs args[3] = {
         { PININ1, PINOUT1, 0},
         { PININ2, PINOUT2, 0},
-        { PININ3, PINOUT3, 0},
+        { PININ3, PINOUT3, 0},  
     };
     pthread_t threads[3];
 
